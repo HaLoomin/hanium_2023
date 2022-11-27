@@ -19,8 +19,8 @@
 #include "Logger_function_list.h"
 #include "sign.cpp"
 #include "../Merkle_Tree/merkle_tree.h"
-#include "../Client/client.cpp"
-#include "../Client/command_define_list.h"
+#include "../L_Client/client.cpp"
+#include "../L_Client/command_define_list.h"
 #include "../msg_queue/msg_queue.cpp"
 
 using namespace std;
@@ -172,6 +172,14 @@ void *UpdateFrame(void *arg)
     pthread_exit((void *)0);
 }
 
+void lamping_time() {
+    Mat temp;
+    for(int i = 0; i < 10; i++){
+        cap >> temp;
+    }
+    temp.release();
+    cout << "lamping time end." << endl;
+}
 void capture()
 {
     cout << endl
@@ -189,17 +197,12 @@ void capture()
         currentFrame = frame;
         pthread_mutex_unlock(&frameLocker);
 
-        int sum1 = (int)sum(currentFrame)[0];
-        int sum2 = (int)sum(currentFrame)[1];
-        int sum3 = (int)sum(currentFrame)[2];
-        int elementmean = (sum1 + sum2 + sum3) / 3;
-
         if (currentFrame.empty())
         {
             cout << "Frame is empty" << endl;
         }
 
-        else if (elementmean != 0)
+        else
         {
             bgr_queue.push(currentFrame);
             // Make CID for FRAMES
@@ -207,10 +210,6 @@ void capture()
             cid_queue.push(s_cid);
         }
 
-        else
-        {
-            cout << "lamping time" << endl;
-        }
 
         if (bgr_queue.size() == DEFAULT_FRAME_COUNT)
         {
@@ -454,7 +453,14 @@ void send_image_hash_to_UI(queue<cv::Mat> &ORI, queue<cv::Mat> &Y)
     cv::imwrite(yfile_path, y);
     string hash = hash_queue.front();
 
-    Image_Hash_request(hash);
+    fstream hash_file("hash.txt", ios::app);
+    if(hash_file.is_open()){
+        hash_file << hash << endl;
+    }
+
+    hash_file.close();
+
+    Image_Hash_request();
 
     ori.release();
     y.release();
@@ -595,6 +601,8 @@ int main(int, char **)
 
         else
         {
+            
+            lamping_time();
             // capture frames
             capture();
             // show_frames(bgr_queue);

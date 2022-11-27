@@ -17,10 +17,10 @@
 #include <fstream>
 #include <filesystem>
 #include <error.h>
-#include <ofstream>
-#include <ifstream>
+// #include <ofstream>
+// #include <ifstream>
 
-#include "command_define_list.h"
+#include "../V_Client/command_define_list.h"
 #include "verifier_cfg.h"
 #include "Verifier_function_list.h"
 #include "verify.cpp"
@@ -39,35 +39,6 @@ queue<string> hash_DB_queue;         // for hash from server
 queue<string> hash_verifier_queue;   // for hash made by feature vector by verifier
 queue<string> cid_queue;             // for CID for images
 bout_database bDB;
-
-int read_pubKey()
-{
-    ifstream pubKeyfile(pubKey_path);
-
-    if (pubKeyfile.is_open())
-    {
-        pubKeyfile.seekg(0, ios::end);
-
-        int size = pubKeyfile.tellg();
-        publicKey.resize(size);
-
-        pubKeyfile.seekg(0, ios::beg);
-        pubKeyfile.read(&publicKey[0], size);
-    } else {
-        cout << "can't find file." << endl;
-    }
-
-    publicKey.erase(prev(publicKey.end()));
-    cout << publicKey;
-
-    cout << endl
-         << "key length : " << publicKey.length() << endl;
-
-    pubKeyfile.close();
-    cout << endl;
-
-    return 0;
-}
 
 int get_data_from_DB(string &CID, queue<string> &CID_QUEUE, queue<string> &HASH_DB_QUEUE)
 {
@@ -253,26 +224,6 @@ void make_hash(queue<cv::Mat> &FV_QUEUE)
     cout << "    hash made : " << hash_verifier_queue.size() << endl;
 }
 
-
-// void show_hash(queue<string> &DB_HASH, queue<string> &VF_HASH)
-// {
-//     queue<string> db_hash(DB_HASH);
-//     queue<string> vf_hash(VF_HASH);
-//     int i = 1;
-//     while (true)
-//     {
-//         if (db_hash.size() == 0 && vf_hash.size() == 0)
-//         {
-//             break;
-//         }
-//         cout << "DB hash" << i << ": " << db_hash.front() << endl;
-//         cout << "VF hash" << i << ": " << vf_hash.front() << endl;
-//         i++;
-//         db_hash.pop();
-//         vf_hash.pop();
-//     }
-// }
-
 int make_merkle_tree(queue<string> &HASH_DB_QUEUE, queue<string> &HASH_VERIFIER_QUEUE)
 {
     vector<Node *> leaves_DB;
@@ -364,6 +315,8 @@ int main()
 
     // make_merkle_tree(hash_DB_queue, hash_verifier_queue);
     // init_all_setting();
+
+    
     string x = "select CID from 2022_1027 where verified == 1";
     char *xx = new char[x.length() + 1];
     strcpy(xx, x.c_str());

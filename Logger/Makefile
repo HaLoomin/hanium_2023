@@ -18,7 +18,7 @@ all: Logger
 Logger: $(OBJS)
 	$(CXX)  $(OBJS) -o $@ $(LIBS) $(SIGN_VER_FLAGS)
 
-command_parser.o: ./../Client/command_parser.cpp
+command_parser.o: ./../L_Client/command_parser.cpp
 	$(CXX) $(LIBS) -c -o $@ $<
 
 Logger.o: ./Logger.cpp

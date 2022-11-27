@@ -98,9 +98,8 @@ void camera_cfg_res_send()
 }  
 
 // Logger(RECV) <- Web UI(REQ)
-void Image_Hash_request(string HASH){
+void Image_Hash_request(){
 	
-	string hash = HASH;
 	int msgid;
 	Image_hash_req_msg_data data;
 	unsigned char image_hash_req;
@@ -118,7 +117,7 @@ void Image_Hash_request(string HASH){
 	else {
 		 if (data.data_type == TYPE_IMAGE_HASH_REQ) {	
 			cout << "    Web Requested Hash." << endl;
-			Image_Hash_send(hash);
+			Image_Hash_send();
 			//cout << "    IMAGE_HASH sent " << endl; 
 			//Image_Hash_response();		
 		}
@@ -126,11 +125,11 @@ void Image_Hash_request(string HASH){
 }
 
 // Logger(SND) -> Web UI(RECV)
-void Image_Hash_send(string HASH)
+void Image_Hash_send()
 {
-	string Img_HASH = HASH;
 	int msgid;
 	Image_hash_msg_data data;
+	unsigned char image_hash = IMAGE_HASH_RES;
 
 	if (-1 == (msgid = msgget((key_t)IMAGE_HASH_MQ, IPC_CREAT | 0666)))
 	{
@@ -139,16 +138,16 @@ void Image_Hash_send(string HASH)
 	}
 
 	data.data_type = TYPE_IMAGE_HASH;
-	strcpy(data.data_buff, Img_HASH.c_str());
+	memcpy(data.data_buff, &image_hash, sizeof(unsigned char));
 
 	if ( -1 == msgsnd(msgid, &data, sizeof( Image_hash_msg_data) - sizeof( long), 0))
 	{
-		perror( "    Hash send Failed.");
+		perror( "    IMAGE and HASH file not saved.");
 		exit( 1);
 	}
 	else
 	{
-		cout << "    Data: " << data.data_buff << endl;
+		cout << "    IMAGE and HASH file saved. : " << endl;
 	}
 }
 
@@ -174,109 +173,6 @@ int Image_Hash_response()
 		if (data.data_type == TYPE_IMAGE_HASH_RES)
 		{
 			cout << "WebUI received Image PATH and HASH." << endl;
-			memcpy(&recv, data.data_buff, sizeof(unsigned char));
-		}
-	}
-	return (int)recv;
-}
-
-// Verifier(RECV) <- Server(SND)
-int Server2Verifier_CID_send(string CID)
-{
-	int cid_msgid;
-	CID_msg_data data;
-	if (-1 == (cid_msgid = msgget((key_t)CID_MQ, IPC_CREAT | 0666)))
-	{
-		perror("msgget() failed");
-		exit(1);
-	}
-	data.data_type = TYPE_CID;
-	memcpy(&data.data_buff, CID.c_str(), CID.size());
-	cout << data.data_buff << endl;
-
-	if (-1 == msgsnd(cid_msgid, &data, sizeof(CID_msg_data) - sizeof(long), 0))
-	{
-		perror("msgsnd() failed");
-		exit(1);
-	}
-	else
-	{
-		cout << "Data: " << data.data_buff << endl;
-		cout << "CID sent. " << endl;
-	}
-}
-
-// Verifier(RECV) <- Server(SND)
-string Server2Verifier_CID_recv()
-{
-	int cid_msgid;
-	CID_msg_data data;
-	char sCID[CID_BUFF_SIZE];
-	if (-1 == (cid_msgid = msgget((key_t)CID_MQ, IPC_CREAT | 0666)))
-	{
-		perror("msgget() failed");
-		exit(1);
-	}
-	if (-1 == msgrcv(cid_msgid, &data, sizeof(CID_msg_data) - sizeof(long), 0, 0))
-	{
-		cout << "No CID from Server." << endl;
-	}
-	else
-	{
-		cout << "Server sent CID to Verifier" << endl;
-		if (data.data_type == TYPE_CID)
-		{
-			memcpy(&sCID, data.data_buff, sizeof(char) * CID_BUFF_SIZE);
-		}
-	}
-	cout << sCID << endl;
-	return sCID;
-}
-
-// Verfier(RES) -> Server(RECV)
-int Verifier2Server_CID_res_send()
-{
-	int cid_recv_msgid;
-	CID_recv_msg_data data;
-	unsigned char recv = 0x01;
-	if (-1 == (cid_recv_msgid = msgget((key_t)CID_RECV_MQ, IPC_CREAT | 0666)))
-	{
-		perror("msgget() failed");
-		exit(1);
-	}
-	data.data_type = TYPE_CID_RES;
-	memcpy(&data.data_buff, &recv, sizeof(unsigned char));
-	if (-1 == msgsnd(cid_recv_msgid, &data, sizeof(CID_recv_msg_data) - sizeof(long), 0))
-	{
-		perror("msgsnd() failed");
-		exit(1);
-	}
-	else
-	{
-		cout << "Response sent." << endl;
-	}
-}
-
-// Verifier(RES) -> Server(RECV)
-int Verifier2Server_CID_res_recv()
-{
-	int cid_recv_msgid;
-	CID_recv_msg_data data;
-	unsigned char recv;
-	if (-1 == (cid_recv_msgid = msgget((key_t)CID_RECV_MQ, IPC_CREAT | 0666)))
-	{
-		perror("msgget() failed");
-		exit(1);
-	}
-	if (-1 == msgrcv(cid_recv_msgid, &data, sizeof(CID_recv_msg_data) - sizeof(long), 0, 0))
-	{
-		cout << "Verifier didn't received CID." << endl;
-	}
-	else
-	{
-		if (data.data_type == TYPE_CID_RES)
-		{
-			cout << "Verifier received CID." << endl;
 			memcpy(&recv, data.data_buff, sizeof(unsigned char));
 		}
 	}
