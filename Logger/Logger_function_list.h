@@ -15,3 +15,8 @@ void sign_hash(queue<string> &HASH_QUEUE);                                      
 string getCID();                                                                                                                          // Make CID for each frames
 void send_image_hash_to_UI(queue<cv::Mat> &ORI, queue<cv::Mat> &Y);                                                                       // SEND BGR_Image,png, Y_Image.png PATH and Hash code
 void send_data_to_server(queue<string> &CID_QUEUE, queue<string> &HASH_QUEUE, queue<string> &SIGNED_HASH_QUEUE, queue<cv::Mat> &YUV420_QUEUE); // send datas to Server
+/*Test*/
+void convolution_extraction(queue<cv::Mat> &Y_QUEUE);                                                                                     // Feature Extraction by convolution operation
+void CreateZeroPadding(cv::InputArray _Input, cv::OutputArray _Output, const cv::Size& outputSize, const cv::Size& k, const cv::Size& stride);  //zero Padding function
+void Convolution(cv::InputArray _Input, cv::OutputArray _Output, const cv::Size& outputSize, const cv::InputArray& k, const cv::Size& stride);  //Convolution function
+//-------------

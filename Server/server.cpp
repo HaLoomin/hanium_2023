@@ -153,7 +153,8 @@ static int __recv( IO_PORT *p, HANDLE pdata, int len )
 {
 	int     res;
 	struct  timeval tv;
-
+	
+	
 	if( p->timeout > 0 ) {
 		fd_set reads;
 
@@ -164,6 +165,7 @@ static int __recv( IO_PORT *p, HANDLE pdata, int len )
 		tv.tv_usec = 0;
 
 		res = select( p->s+1, &reads, NULL, NULL, &tv );
+		cout << res << endl;
 		if( res == -1 ) {
 			TRACE_ERR( "Select error.\n" );
 			return -1;

@@ -5,6 +5,6 @@
 #define DB_user            "hanium"                //user = webui -> Can extern access
 #define DB_password        "1234"
 #define DB_database        "hanium"
-#define storage_dir        "/home/pi/images/"
+#define storage_dir        "/home/cloud/images/"
 
 #endif

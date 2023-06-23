@@ -2,7 +2,7 @@
 #define __SERVER_CFG__
 //CHANGE SERVER_IP_ADDR to RPI's IP that working as SERVER
 #define SERVER_PORT        8700
-#define storage_dir        "/home/pi/images/"
+#define storage_dir        "/home/cloud/images/"
 
 // Deafault values for datasize
 #define Hash_size          64

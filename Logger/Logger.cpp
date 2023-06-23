@@ -577,6 +577,123 @@ void send_data_to_server(queue<string> &CID_QUEUE, queue<string> &HASH_QUEUE, qu
     cout << "----SEND END----------------" << endl;
 }
 
+//TEST!!!!---------------------------------------------------------
+
+void convolution_extraction(queue<cv::Mat> &Y_QUEUE) {
+    queue<cv::Mat> Y_queue(Y_QUEUE);
+
+    cout << "----Building feature vectors." << endl;
+    cv::Mat kernel = cv::Mat_<float>({ 3, 3 }, { 0, -1, 0, -1, 5, -1, 0, -1, 0 }); // CHANGE KERNEL INPUT 
+	cout << "--------------------------------------" << endl;
+	cout << "KERNEL:\n " << kernel << endl;
+	cout << "--------------------------------------" << endl;
+
+    while (true)
+    {
+        if (Y_queue.size() == 0)
+        {
+            break;
+        }
+        cv::Mat input = Y_queue.front().clone();
+        input.convertTo(input, CV_32F);		// NEED to CONVERT CV_8U to CV32F for operation
+        cv::Mat output;
+	    cv::Mat zeroPadding;
+
+	    // ZeroPadding
+	    cout << "Input Data size: " << input.size() << endl;
+	    cout << "--------------------------------------" << endl;
+	    CreateZeroPadding(input, zeroPadding, input.size(), kernel.size(), cv::Size(1, 1));
+	    cout << "ZERO PADDING RESULT" << endl;
+	    cout << "SIZE: " << zeroPadding.size() << endl;
+	    cout << "TYPE: " << zeroPadding.type() << endl;
+	    cout << "CHANNELS: " << zeroPadding.channels() << endl;
+	    cout << "--------------------------------------" << endl;
+
+	    int Kernel_halfWidth = (kernel.rows - 1) / 2;
+	    output = zeroPadding.clone();
+
+	    // Convolution
+	    Convolution(zeroPadding, output, input.size(), kernel, cv::Size(1, 1));
+        output.convertTo(output, CV_8U);
+	    cout << "Convolution result: " << output.size() << endl;
+	    cout << " CONVOLUTION RESULT" << endl;
+	    cout << "SIZE: " << output.size() << endl;
+	    cout << "TYPE: " << output.type() << endl;
+	    cout << "CHANNELS: " << output.channels() << endl;
+	    cout << "--------------------------------------" << endl;
+        
+        feature_vector_queue.push(output);
+        Y_queue.pop();
+
+        input.release();
+        output.release();
+        zeroPadding.release();
+    }
+    cout << endl
+         << "    Edge Detection made: " << feature_vector_queue.size() << endl;
+}
+
+void CreateZeroPadding(cv::InputArray _Input, cv::OutputArray _Output, const cv::Size& outputSize, const cv::Size& k, const cv::Size& stride)
+{
+	cv::Mat input = _Input.getMat();
+	_Input.copyTo(_Output);
+
+	//패딩 맞추기 자동화(합성곱 출력 크기 계산 https://excelsior-cjh.tistory.com/79)
+	double p = 0;
+	int oH = (int)((input.rows + 2 * p - k.height) / stride.height) + 1;
+	int oW = (int)((input.cols + 2 * p - k.width) / stride.width) + 1;
+	//제로 패딩 행렬 생성
+	//패딩이 0.5 늘어날 때마다 왼쪽 + 위, 오른쪽 + 아래 순으로 행렬 확장
+	while (oH != outputSize.height) {
+		p += 0.5;
+		if (p - (int)p != 0)
+			cv::copyMakeBorder(_Output, _Output, 1, 0, 0, 0, cv::BORDER_CONSTANT, 0);
+		else
+			cv::copyMakeBorder(_Output, _Output, 0, 1, 0, 0, cv::BORDER_CONSTANT, 0);
+
+		oH = (int)((input.rows + 2 * p - k.height) / stride.height) + 1;
+	}
+	p = 0;
+	while (oW != outputSize.width) {
+		p += 0.5;
+		if (p - (int)p != 0)
+			cv::copyMakeBorder(_Output, _Output, 0, 0, 1, 0, cv::BORDER_CONSTANT, 0);
+		else
+			cv::copyMakeBorder(_Output, _Output, 0, 0, 0, 1, cv::BORDER_CONSTANT, 0);
+
+		oW = (int)((input.cols + 2 * p - k.width) / stride.width) + 1;
+	}
+}
+
+void Convolution(cv::InputArray _Input, cv::OutputArray _Output, const cv::Size& outputSize, const cv::InputArray& k, const cv::Size& stride)
+{
+	Mat kernel = k.getMat();
+	Mat zeroPaddingMat = _Input.getMat();
+	//입력 행렬이 제로 패딩 되어있지 않을 경우 제로 패딩 함수를 호출
+	if ((zeroPaddingMat.rows - kernel.rows) / stride.height + 1 != outputSize.height
+		|| (zeroPaddingMat.cols - kernel.cols) / stride.width + 1 != outputSize.width) {
+		CreateZeroPadding(zeroPaddingMat, zeroPaddingMat, zeroPaddingMat.size(), kernel.size(), stride);
+	}
+
+	_Output.create(outputSize, _Input.type());
+	_Output.setTo(0);
+	Mat output = _Output.getMat();
+
+	//제로 패딩 행렬과 커널로 교차 상관 연산 후, 연산 결과를 _Output 행렬에 저장
+	for (int y = 0; y < output.rows; y++) {
+		for (int x = 0; x < output.cols; x++) {
+			for (int ky = 0; ky < kernel.rows; ky++) {
+				for (int kx = 0; kx < kernel.cols; kx++) {
+					output.at<float>(y, x) += kernel.at<float>(ky, kx) * zeroPaddingMat.at<float>(y * stride.height + ky, x * stride.width + kx);
+				}
+			}
+		}
+	}
+}
+
+
+//------------------------------------------------------------------
+
 int main(int, char **)
 {
     
@@ -611,7 +728,8 @@ int main(int, char **)
             convert_frames(bgr_queue);
 
             // USE Canny Edge Detection with Y_Frames
-            edge_detection(y_queue);
+            //edge_detection(y_queue);
+            convolution_extraction(y_queue);
 
             // make Hash by edge_detected datas
             make_hash(feature_vector_queue);

@@ -287,6 +287,9 @@ int prover_response(HEADERPACKET* msg, IO_PORT *port){
 */
 int test(HEADERPACKET* msg, IO_PORT *port){
 	FILE *file = fopen("test.txt", "wb");
+
+	if (file == NULL)
+		cout << "file creation failed " << endl;
 	reshape_buffer(msg->dataType, msg->dataSize);
 	
 	if(recv_binary(port, msg->dataSize, recv_buf) == 0){

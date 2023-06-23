@@ -21,6 +21,7 @@ struct db_user {
 };
 
 void mkdir_func(string str){
+
 	if(mkdir(str.c_str(), 0777) == -1 && errno != EEXIST){
 		fprintf(stderr, "%s directory create error: %s\n", strerror(errno));
 		exit(0);
@@ -145,10 +146,13 @@ void bout_database::create_table(){
 void bout_database::update_database(char* order){
 	res = mysql_perform_query(conn, order);
 	cout << endl << "---------------------------------------------------" << endl;
+
+	/* the following code make an error
 	while((row = mysql_fetch_row(res)) != NULL){
 		string x = row[0];
 		cout << x << endl;
 	}
+	*/
 }
 
 string bout_database::get_latest_key_ID(char* order){
